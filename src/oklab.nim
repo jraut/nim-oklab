@@ -62,7 +62,7 @@ proc oklabToLinearSrgb(c: Lab): RGB =
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
 proc labToChroma(c: Lab): float =
-  cbrt(c.a * c.a + c.b * c.b)
+  sqrt(c.a * c.a + c.b * c.b)
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
 proc labToHue(c: Lab): float = 
