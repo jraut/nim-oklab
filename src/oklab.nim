@@ -130,10 +130,12 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   var l = lightnessOffset
   let colors = generate9()
   let bg = colors[0]
+  # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
   for i in 0..8:
     result[i] = lightness(bg, l)
     l += stepLength
   var i = 8
+  # 8-15 are highlight colors
   for c in (low(colors) + 1)..high(colors): # skip the first color - it was used for background
     result[i] = colors[c] 
     inc(i)
