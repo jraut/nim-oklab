@@ -70,8 +70,7 @@ proc labToHue(c: Lab): float =
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
 proc labToLightness(c: Lab): float = 
-  1 / (labToChroma(c) * labToHue(c))
-
+  c.l
 
 proc aLab(cLab: float, hLab: float): float =
   cLab * cos(hLab)
