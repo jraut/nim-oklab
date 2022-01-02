@@ -1,6 +1,7 @@
 import os
 import std/math
 from std/strutils import parseFloat
+from std/strformat import fmt
 
 const TWO_PI = PI * 2
 
@@ -96,6 +97,10 @@ proc hue(color: Lab, hue: float): Lab =
 ############
 
 echo("OKlab basic implementation. Converts RGB to Oklab")
+
+proc rgbToHexString(f: float): string =
+  let i = toInt(f)
+  result = fmt("{i:02X}")
 
 # helper which takes input from CLI
 proc hexToLinearRgb(h: string): float =
