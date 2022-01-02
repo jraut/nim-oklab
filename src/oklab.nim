@@ -104,7 +104,41 @@ proc rgbToHexString(f: float): string =
 
 # helper which takes input from CLI
 proc hexToLinearRgb(h: string): float =
-  rgbComponentToLinearRgb(parseFloat(h) / 255)
+  let n = parseFloat(h)
+  rgbComponentToLinearRgb(n / 255)
+
+proc linearRgbToHexString(c: float): string =
+  rgbToHexString(linearRgbToRgbComponent(c) * 255.0)
+
+proc labToHex(c: Lab): string =
+  let rgb = oklabToLinearSrgb(c)
+  "#" & linearRgbToHexString(rgb.r) & linearRgbToHexString(rgb.g) & linearRgbToHexString(rgb.b)
+
+############
+
+
+proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
+  const stepLength = (PI * 2) / 9 # TODO: support for narrowed scope
+  var swatch = labToHue(color)
+  for i in low(result)..high(result):
+    result[i] = hue(color, swatch)
+    swatch = addRadialDistance(swatch, stepLength)
+
+proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
+  const lightnessOffset = 0.1
+  const stepLength = (1 - lightnessOffset * 2) / 8
+  var l = lightnessOffset
+  let colors = generate9()
+  let bg = colors[0]
+  for i in 0..8:
+    result[i] = lightness(bg, l)
+    l += stepLength
+  var i = 8
+  for c in (low(colors) + 1)..high(colors): # skip the first color - it was used for background
+    result[i] = colors[c] 
+    inc(i)
+
+############
 
 if paramCount() < 3:
   quit("Please, input an RGB color as rgb components (0-255)")
