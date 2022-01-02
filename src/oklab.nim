@@ -1,6 +1,5 @@
 import os
 import std/math
-from std/parseUtils import parseHex
 from std/strutils import parseFloat
 
 type 
