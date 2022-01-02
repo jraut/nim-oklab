@@ -2,6 +2,12 @@ import os
 import std/math
 from std/strutils import parseFloat
 
+const TWO_PI = PI * 2
+
+proc addRadialDistance(pointRad: float, lengthRad: float): float =
+  let ad = PI + pointRad + lengthRad
+  result = (ad mod TWO_PI) - PI
+
 type 
   RGB = tuple
     r: float
