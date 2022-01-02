@@ -143,15 +143,19 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
 if paramCount() < 3:
   quit("Please, input an RGB color as rgb components (0-255)")
 
-
 let r = hexToLinearRgb(paramStr(1))
 let g = hexToLinearRgb(paramStr(2))
 let b = hexToLinearRgb(paramStr(3))
 
 let linearRgb = (r, g, b)
-
-echo("Linear rgb values: ", linearRgb)
-
 let lab = linearSrgbToOklab(linearRgb)
 
-echo("Oklab values: ", lab)
+echo("Linear rgb: ", linearRgb)
+echo("Hex: ", labToHex(lab))
+echo("Oklab: ", lab)
+
+# let labLight = lightness(lab, 1.0)
+# echo("Oklab values (full lightness): ", labLight)
+
+echo("Base16 palette as Lab values:")
+echo("Values", generate16())
