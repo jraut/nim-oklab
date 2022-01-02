@@ -73,6 +73,24 @@ proc labToHue(c: Lab): float =
 proc labToLightness(c: Lab): float = 
   1 / (labToChroma(c) * labToHue(c))
 
+
+proc aLab(cLab: float, hLab: float): float =
+  cLab * cos(hLab)
+
+
+proc bLab(cLab: float, hLab: float): float =
+  cLab * sin(hLab)
+
+proc lightness(color: Lab, lightness: float): Lab =
+  (lightness, color.a, color.b)
+
+proc hue(color: Lab, hue: float): Lab =
+  let (l, _, _) = color
+  let chroma = labToChroma(color)
+  (l, aLab(chroma, hue), bLab(chroma, hue))
+
+############
+
 echo("OKlab basic implementation. Converts RGB to Oklab")
 
 # helper which takes input from CLI
