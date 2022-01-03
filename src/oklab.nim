@@ -9,17 +9,22 @@ proc addRadialDistance(pointRad: float, lengthRad: float): float =
   let ad = PI + pointRad + lengthRad
   result = (ad mod TWO_PI) - PI
 
-type 
+type
   RGB = tuple
     r: float
     g: float
     b: float
-  
+
 type
   Lab = tuple
     l: float
     a: float
     b: float
+
+proc clamp(d: float, min: float, max: float): float =
+  let t = if (d < min): min else: d
+  return if (t > max): max else: t
+
 
 # https://stackoverflow.com/questions/34472375/linear-to-srgb-conversion?rq=1
 proc rgbComponentToLinearRgb(x: float): float =
@@ -29,13 +34,13 @@ proc rgbComponentToLinearRgb(x: float): float =
     12.92 * x
 
 # https://stackoverflow.com/questions/34472375/linear-to-srgb-conversion?rq=1
-proc linearRgbToRgbComponent(x: float): float = 
+proc linearRgbComponentToRgb(x: float): float =
   if x >= 0.0404482362771082:
-    pow((x + 0.055) / (1.055), 2.4) 
+    pow((x + 0.055) / (1.055), 2.4)
   else:
     x / 12.92
 
-proc linearRgbToRgb(c: RGB): RGB = 
+proc linearRgbToRgb(c: RGB): RGB =
   return (r: clamp(linearRgbComponentToRgb(c.r), 0.0, 1.0), g: clamp(linearRgbComponentToRgb(c.g), 0.0, 1.0), b: clamp(linearRgbComponentToRgb(c.b), 0.0, 1.0))
 
 proc rgbToLinearRgb(c: RGB): RGB =
@@ -58,7 +63,7 @@ proc linearSrgbToOklab(c: RGB): Lab =
   )
 
 # Reference implementation taken form https://bottosson.github.io/posts/oklab/
-proc oklabToLinearSrgb(c: Lab): RGB = 
+proc oklabToLinearSrgb(c: Lab): RGB =
   let l2 = c.l + 0.3963377774 * c.a + 0.2158037573 * c.b
   let m2 = c.l - 0.1055613458 * c.a - 0.0638541728 * c.b
   let s2 = c.l - 0.0894841775 * c.a - 1.2914855480 * c.b
@@ -79,11 +84,11 @@ proc labToChroma(c: Lab): float =
   sqrt(c.a * c.a + c.b * c.b)
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
-proc labToHue(c: Lab): float = 
+proc labToHue(c: Lab): float =
   arctan2(c.b, c.a)
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
-proc labToLightness(c: Lab): float = 
+proc labToLightness(c: Lab): float =
   c.l
 
 proc aLab(cLab: float, hLab: float): float =
@@ -105,7 +110,7 @@ proc hue(color: Lab, hue: float): Lab =
 
 echo("OKlab basic implementation. Converts RGB to Oklab")
 
-proc rgbToHexString(f: float): string =
+proc rgbComponentToHexString(f: float): string =
   let i = toInt(f)
   result = fmt("{i:02X}")
 
@@ -115,11 +120,19 @@ proc hexToLinearRgb(h: string): float =
   rgbComponentToLinearRgb(n / 255)
 
 proc linearRgbToHexString(c: float): string =
-  rgbToHexString(linearRgbToRgbComponent(c) * 255.0)
+  rgbComponentToHexString(linearRgbComponentToRgb(c) * 255.0)
 
 proc labToHex(c: Lab): string =
   let rgb = oklabToLinearSrgb(c)
-  "#" & linearRgbToHexString(rgb.r) & linearRgbToHexString(rgb.g) & linearRgbToHexString(rgb.b)
+  let srgb = linearRgbToRgb(rgb)
+  "#" & rgbComponentToHexString(srgb.r * 255) & rgbComponentToHexString(srgb.g * 255) & rgbComponentToHexString(srgb.b * 255)
+
+proc colorSchemePrint(colors: array[16, Lab]): string =
+  result = result & "scheme: \"Base16-generated\"\n"
+  result &= "author: \"Juho Rautioaho\"\n"
+  for i in low(colors)..high(colors):
+    let color = labToHex(colors[i])
+    result &= fmt("base{i:02X}: {color}\n")
 
 ############
 
@@ -135,16 +148,16 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   const lightnessOffset = 0.1
   const stepLength = (1 - lightnessOffset * 2) / 8
   var l = lightnessOffset
-  let colors = generate9()
+  let colors = generate9(color)
   let bg = colors[0]
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
-  for i in 0..8:
+  for i in 0..7:
     result[i] = lightness(bg, l)
     l += stepLength
   var i = 8
   # 8-15 are highlight colors
   for c in (low(colors) + 1)..high(colors): # skip the first color - it was used for background
-    result[i] = colors[c] 
+    result[i] = colors[c]
     inc(i)
 
 ############
@@ -160,11 +173,11 @@ let linearRgb = (r, g, b)
 let lab = linearSrgbToOklab(linearRgb)
 
 echo("Linear rgb: ", linearRgb)
-echo("Hex: ", labToHex(lab))
 echo("Oklab: ", lab)
+echo("Hex: ", labToHex(lab))
 
 # let labLight = lightness(lab, 1.0)
 # echo("Oklab values (full lightness): ", labLight)
 
 echo("Base16 palette as Lab values:")
-echo("Values", generate16())
+echo("\n\n", colorSchemePrint(generate16(lab)))
