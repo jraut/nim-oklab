@@ -35,15 +35,21 @@ proc linearRgbToRgbComponent(x: float): float =
   else:
     x / 12.92
 
-# Reference implementation taken form https://bottosson.github.io/posts/oklab/
-proc linearSrgbToOklab(c: RGB): Lab =
-  let l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
-  let m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
-  let s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
+proc linearRgbToRgb(c: RGB): RGB = 
+  return (r: clamp(linearRgbComponentToRgb(c.r), 0.0, 1.0), g: clamp(linearRgbComponentToRgb(c.g), 0.0, 1.0), b: clamp(linearRgbComponentToRgb(c.b), 0.0, 1.0))
 
-  let l2 = cbrt(l);
-  let m2 = cbrt(m);
-  let s2 = cbrt(s);
+proc rgbToLinearRgb(c: RGB): RGB =
+  return (r: clamp(rgbComponentToLinearRgb(c.r), 0.0, 1.0), g: clamp(rgbComponentToLinearRgb(c.g), 0.0, 1.0), b: clamp(rgbComponentToLinearRgb(c.b), 0.0, 1.0))
+# Reference implementation taken form https://bottosson.github.io/posts/oklab/
+
+proc linearSrgbToOklab(c: RGB): Lab =
+  let l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b
+  let m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b
+  let s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b
+
+  let l2 = cbrt(l)
+  let m2 = cbrt(m)
+  let s2 = cbrt(s)
 
   return (
     0.2104542553 * l2 + 0.7936177850 * m2 - 0.0040720468 * s2,
@@ -53,19 +59,20 @@ proc linearSrgbToOklab(c: RGB): Lab =
 
 # Reference implementation taken form https://bottosson.github.io/posts/oklab/
 proc oklabToLinearSrgb(c: Lab): RGB = 
-    let l2 = c.l + 0.3963377774 * c.a + 0.2158037573 * c.b;
-    let m2 = c.l - 0.1055613458 * c.a - 0.0638541728 * c.b;
-    let s2 = c.l - 0.0894841775 * c.a - 1.2914855480 * c.b;
+  let l2 = c.l + 0.3963377774 * c.a + 0.2158037573 * c.b
+  let m2 = c.l - 0.1055613458 * c.a - 0.0638541728 * c.b
+  let s2 = c.l - 0.0894841775 * c.a - 1.2914855480 * c.b
 
-    let l = l2 * l2 * l2;
-    let m = m2 * m2 * m2;
-    let s = s2 * s2 * s2;
+  let l = l2 * l2 * l2
+  let m = m2 * m2 * m2
+  let s = s2 * s2 * s2
 
-    return (
-       4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-      -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
-    )
+  return (
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  )
+
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
 proc labToChroma(c: Lab): float =
