@@ -137,12 +137,14 @@ proc colorSchemePrint(colors: array[16, Lab]): string =
 ############
 
 
+proc generateColor(color: Lab, steplength: float, i: int): Lab =
+  let h = labToHue(color)
+  hue(color, addRadialDistance(h, steplength * float(i)))
+
 proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
   const stepLength = (PI * 2) / 9 # TODO: support for narrowed scope
-  var swatch = labToHue(color)
   for i in low(result)..high(result):
-    result[i] = hue(color, swatch)
-    swatch = addRadialDistance(swatch, stepLength)
+    result[i] = generateColor(color, stepLength, i)
 
 proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   const lightnessOffset = 0.1
