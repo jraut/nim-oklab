@@ -162,17 +162,20 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   var c = 1.0 - chromaOffset
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
   for i in 0..gradientStepN:
-    echo l
     result[i] = lightness(chroma(color, max(0.001, c)), min(1.0, l))
     l += lightnessStepLength
     c -= chromaStepLength
 
   result[8] = color
-
+  c = labToChroma(color)
+  l = labToLightness(color)
   let colorStepLength = (PI * 2) / 8
   # 8-15 are highlight colors, first with the requested color
   for i in 9..15: # skip the first color - it was used for background
-    result[i] = chroma(lightness(generateCOlor(color, colorStepLength, i), 0.95), 0.05)
+    c = if i mod 2 == 0: 0.06 else: 0.06
+    l = if i mod 2 == 0: 0.88 else: 0.98
+    let granularity = int(i / 2) * 2 # this makes the color stall between colors
+    result[i] = lightness(chroma(generateCOlor(color, colorStepLength, granularity), c), l)
 
 ############
 
