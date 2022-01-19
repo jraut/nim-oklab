@@ -106,6 +106,11 @@ proc hue(color: Lab, hue: float): Lab =
   let chroma = labToChroma(color)
   (l, aLab(chroma, hue), bLab(chroma, hue))
 
+proc chroma(color: Lab, chroma: float): Lab =
+  let (l, _, _) = color
+  let hue = labToHue(color)
+  (l, aLab(chroma, hue), bLab(chroma, hue))
+
 ############
 
 echo("OKlab basic implementation. Converts RGB to Oklab")
@@ -141,26 +146,33 @@ proc generateColor(color: Lab, steplength: float, i: int): Lab =
   let h = labToHue(color)
   hue(color, addRadialDistance(h, steplength * float(i)))
 
+
 proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
   const stepLength = (PI * 2) / 9 # TODO: support for narrowed scope
   for i in low(result)..high(result):
     result[i] = generateColor(color, stepLength, i)
 
 proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
-  const lightnessOffset = 0.1
-  const stepLength = (1 - lightnessOffset * 2) / 8
+  const gradientStepN = 7
+  const lightnessOffset = 0.6
+  const chromaOffset = 0.9
+  const lightnessStepLength = (1 - lightnessOffset) / (gradientStepN - 1)
+  const chromaStepLength = (1 - chromaOffset) / (gradientStepN)
   var l = lightnessOffset
-  let colors = generate9(color)
-  let bg = colors[0]
+  var c = 1.0 - chromaOffset
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
-  for i in 0..7:
-    result[i] = lightness(bg, l)
-    l += stepLength
-  var i = 8
-  # 8-15 are highlight colors
-  for c in (low(colors) + 1)..high(colors): # skip the first color - it was used for background
-    result[i] = colors[c]
-    inc(i)
+  for i in 0..gradientStepN:
+    echo l
+    result[i] = lightness(chroma(color, max(0.001, c)), min(1.0, l))
+    l += lightnessStepLength
+    c -= chromaStepLength
+
+  result[8] = color
+
+  let colorStepLength = (PI * 2) / 8
+  # 8-15 are highlight colors, first with the requested color
+  for i in 9..15: # skip the first color - it was used for background
+    result[i] = chroma(lightness(generateCOlor(color, colorStepLength, i), 0.95), 0.05)
 
 ############
 
