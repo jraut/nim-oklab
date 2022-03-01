@@ -9,6 +9,10 @@ proc addRadialDistance(pointRad: float, lengthRad: float): float =
   let ad = PI + pointRad + lengthRad
   result = (ad mod TWO_PI) - PI
 
+type LinearGradientSweepType = enum
+  chroma, lightness
+
+proc gradientSweepGenerator(sweepType: LinearGradientSweepType): auto = (proc)
 type
   RGB = tuple
     r: float
@@ -147,14 +151,26 @@ proc colorSchemePrint(colors: array[16, Lab]): string =
 ############
 
 
-proc colorGenerator(color: Lab, steplength: float): auto = (proc(i: int): Lab =
+proc hueSweepGenerator(color: Lab, steplength: float): auto = (proc(i: int): Lab =
   let h = hue(color)
   setHue(color, addRadialDistance(h, steplength * float(i))))
 
+proc linearPropertySweepGenerator(color: Lab,
+    sweepType: LinearGradientSweepType): auto = (proc(i: int): Lab =
+  let sweepHandler = case sweepType
+    of LinearGradientSweepType.lightness: setLightness
+    of LinearGradientSweepType.chroma: setChroma
+  let offset = case sweepType
+    of LinearGradientSweepType.lightness: 0.0025
+    of LinearGradientSweepType.chroma: 0.1
+  let stepLength = 1 - (2*offset)
+  echo(stepLength * float(i))
+  sweepHandler(color, max(0, min(offset + stepLength * float(i), 1)))
+)
 
 proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
   const stepLength = (PI * 2) / 9 # TODO: support for narrowed scope
-  let generator = colorGenerator(color, stepLength)
+  let generator = hueSweepGenerator(color, stepLength)
   for i in low(result)..high(result):
     result[i] = generator(i)
 
@@ -166,18 +182,24 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   const chromaStepLength = (1 - chromaOffset * 2) / (gradientStepN)
   var l = lightnessOffset
   var c = 1.0 - chromaOffset
+  echo("stepLength: ", chromaOffset)
+
+  let generateSweep = linearPropertySweepGenerator(color,
+      LinearGradientSweepType.chroma, chromaStepLength)
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
   for i in 0..gradientStepN:
-    result[i] = setLightness(setChroma(color, max(chromaOffset, c)), min(1 - chromaOffset, l))
-    l += lightnessStepLength
-    c -= chromaStepLength
+    result[i] = generateSweep(i)
+    # setLightness(setChroma(color, max(chromaOffset, c)), min(1 -
+      # chromaOffset, l))
+    # l += lightnessStepLength
+    # c -= chromaStepLength
 
   result[8] = color
   c = chroma(color)
   l = lightness(color)
   let colorStepLength = (PI * 2) / 8
   # 8-15 are highlight colors, first with the requested color
-  let generator = colorGenerator(color, colorStepLength)
+  let generator = hueSweepGenerator(color, colorStepLength)
   for i in 9..15: # skip the first color - it was used for background
     c = if i mod 2 == 0: 0.06 else: 0.06
     l = if i mod 2 == 0: 0.88 else: 0.98
