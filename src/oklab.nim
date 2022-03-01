@@ -41,10 +41,14 @@ proc linearRgbComponentToRgb(x: float): float =
     x / 12.92
 
 proc linearRgbToRgb(c: RGB): RGB =
-  return (r: clamp(linearRgbComponentToRgb(c.r), 0.0, 1.0), g: clamp(linearRgbComponentToRgb(c.g), 0.0, 1.0), b: clamp(linearRgbComponentToRgb(c.b), 0.0, 1.0))
+  return (r: clamp(linearRgbComponentToRgb(c.r), 0.0, 1.0), g: clamp(
+      linearRgbComponentToRgb(c.g), 0.0, 1.0), b: clamp(linearRgbComponentToRgb(
+      c.b), 0.0, 1.0))
 
 proc rgbToLinearRgb(c: RGB): RGB =
-  return (r: clamp(rgbComponentToLinearRgb(c.r), 0.0, 1.0), g: clamp(rgbComponentToLinearRgb(c.g), 0.0, 1.0), b: clamp(rgbComponentToLinearRgb(c.b), 0.0, 1.0))
+  return (r: clamp(rgbComponentToLinearRgb(c.r), 0.0, 1.0), g: clamp(
+      rgbComponentToLinearRgb(c.g), 0.0, 1.0), b: clamp(rgbComponentToLinearRgb(
+      c.b), 0.0, 1.0))
 # Reference implementation taken form https://bottosson.github.io/posts/oklab/
 
 proc linearSrgbToOklab(c: RGB): Lab =
@@ -130,7 +134,8 @@ proc linearRgbToHexString(c: float): string =
 proc labToHex(c: Lab): string =
   let rgb = oklabToLinearSrgb(c)
   let srgb = linearRgbToRgb(rgb)
-  "#" & rgbComponentToHexString(srgb.r * 255) & rgbComponentToHexString(srgb.g * 255) & rgbComponentToHexString(srgb.b * 255)
+  "#" & rgbComponentToHexString(srgb.r * 255) & rgbComponentToHexString(srgb.g *
+      255) & rgbComponentToHexString(srgb.b * 255)
 
 proc colorSchemePrint(colors: array[16, Lab]): string =
   result = result & "scheme: \"Base16-generated\"\n"
