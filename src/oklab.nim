@@ -80,15 +80,15 @@ proc oklabToLinearSrgb(c: Lab): RGB =
 
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
-proc labToChroma(c: Lab): float =
+proc chroma(c: Lab): float =
   sqrt(c.a * c.a + c.b * c.b)
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
-proc labToHue(c: Lab): float =
+proc hue(c: Lab): float =
   arctan2(c.b, c.a)
 
 # Implementation taken form https://bottosson.github.io/posts/oklab/
-proc labToLightness(c: Lab): float =
+proc lightness(c: Lab): float =
   c.l
 
 proc aLab(cLab: float, hLab: float): float =
@@ -98,17 +98,17 @@ proc aLab(cLab: float, hLab: float): float =
 proc bLab(cLab: float, hLab: float): float =
   cLab * sin(hLab)
 
-proc lightness(color: Lab, lightness: float): Lab =
+proc setLightness(color: Lab, lightness: float): Lab =
   (lightness, color.a, color.b)
 
-proc hue(color: Lab, hue: float): Lab =
+proc setHue(color: Lab, hue: float): Lab =
   let (l, _, _) = color
-  let chroma = labToChroma(color)
+  let chroma = chroma(color)
   (l, aLab(chroma, hue), bLab(chroma, hue))
 
-proc chroma(color: Lab, chroma: float): Lab =
+proc setChroma(color: Lab, chroma: float): Lab =
   let (l, _, _) = color
-  let hue = labToHue(color)
+  let hue = hue(color)
   (l, aLab(chroma, hue), bLab(chroma, hue))
 
 ############
@@ -143,8 +143,8 @@ proc colorSchemePrint(colors: array[16, Lab]): string =
 
 
 proc generateColor(color: Lab, steplength: float, i: int): Lab =
-  let h = labToHue(color)
-  hue(color, addRadialDistance(h, steplength * float(i)))
+  let h = hue(color)
+  setHue(color, addRadialDistance(h, steplength * float(i)))
 
 
 proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
@@ -162,20 +162,20 @@ proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   var c = 1.0 - chromaOffset
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
   for i in 0..gradientStepN:
-    result[i] = lightness(chroma(color, max(0.001, c)), min(1.0, l))
+    result[i] = setLightness(setChroma(color, max(0.001, c)), min(1.0, l))
     l += lightnessStepLength
     c -= chromaStepLength
 
   result[8] = color
-  c = labToChroma(color)
-  l = labToLightness(color)
+  c = chroma(color)
+  l = lightness(color)
   let colorStepLength = (PI * 2) / 8
   # 8-15 are highlight colors, first with the requested color
   for i in 9..15: # skip the first color - it was used for background
     c = if i mod 2 == 0: 0.06 else: 0.06
     l = if i mod 2 == 0: 0.88 else: 0.98
     let granularity = int(i / 2) * 2 # this makes the color stall between colors
-    result[i] = lightness(chroma(generateCOlor(color, colorStepLength, granularity), c), l)
+    result[i] = setLightness(setChroma(generateCOlor(color, colorStepLength, granularity), c), l)
 
 ############
 
