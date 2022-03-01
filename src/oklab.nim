@@ -161,14 +161,14 @@ proc generate9(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[9, Lab] =
 proc generate16(color: Lab = (l: 0.7, a: 0.2, b: 0.4)): array[16, Lab] =
   const gradientStepN = 7
   const lightnessOffset = 0.6
-  const chromaOffset = 0.9
+  const chromaOffset = 0.0025
   const lightnessStepLength = (1 - lightnessOffset) / (gradientStepN - 1)
-  const chromaStepLength = (1 - chromaOffset) / (gradientStepN)
+  const chromaStepLength = (1 - chromaOffset * 2) / (gradientStepN)
   var l = lightnessOffset
   var c = 1.0 - chromaOffset
   # 0-7 are same colour in 8-step gradient from dark to light (or light to dark)
   for i in 0..gradientStepN:
-    result[i] = setLightness(setChroma(color, max(0.001, c)), min(1.0, l))
+    result[i] = setLightness(setChroma(color, max(chromaOffset, c)), min(1 - chromaOffset, l))
     l += lightnessStepLength
     c -= chromaStepLength
 
